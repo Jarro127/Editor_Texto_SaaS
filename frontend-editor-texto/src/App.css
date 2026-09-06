@@ -1,0 +1,44 @@
+#root {
+  width: 100%;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 40px;
+  background-color: #f5f5f5;
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  margin-bottom: 5px;
+}
+
+.editor {
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+}
+
+.editor input,
+.editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  padding: 12px;
+  font-size: 16px;
+}
+
+.editor textarea {
+  resize: vertical;
+}
+
+.editor button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}

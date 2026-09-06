@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CloudDoc SaaS — Editor de Texto Profesional</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body class="bg-light d-flex flex-column vh-100 overflow-hidden">
+  <header>
+    <nav class="navbar navbar-expand navbar-dark bg-dark px-3 py-2 border-bottom shadow-sm">
+      <div class="container-fluid px-0 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-outline-light btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+            <i class="bi bi-folder2-open fs-5"></i>
+          </button>
+          <div class="d-flex align-items-center gap-2 text-decoration-none text-white">
+            <div class="bg-primary text-white rounded p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+              <i class="bi bi-file-earmark-richtext-fill fs-5"></i>
+            </div>
+            <span class="fw-bold fs-5 tracking-tight d-none d-sm-inline">CloudDoc <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xs">SaaS</span></span>
+          </div>
+        </div>
+        <div class="d-flex align-items-center flex-grow-1 mx-2 mx-md-4" style="max-width: 380px;">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-dark border-secondary text-secondary d-none d-md-flex"><i class="bi bi-pencil-fill"></i></span>
+            <input type="text" id="docTitulo" class="form-control form-control-sm bg-dark text-white border-secondary fw-semibold" placeholder="Documento sin título" aria-label="Título del documento">
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span id="trialBadge" class="badge bg-warning text-dark border border-warning d-none d-md-inline-flex align-items-center gap-1">
+            <i class="bi bi-clock-history"></i> <span id="trialTimer">1:00</span>
+          </span>
+          <span id="userBadge" class="badge bg-dark border border-secondary text-white d-none d-lg-inline-flex align-items-center gap-1">
+            <i class="bi bi-person-circle"></i> <span id="userEmailText">Invitado</span>
+          </span>
+          <span id="syncBadge" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle d-none d-md-inline-flex align-items-center gap-1">
+            <i class="bi bi-cloud-check"></i> Sincronizado
+          </span>
+          <button id="btnUpgrade" class="btn btn-warning btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-star-fill"></i> <span class="d-none d-md-inline">Plan Pro</span>
+          </button>
+          <button id="btnNuevo" class="btn btn-outline-light btn-sm" title="Crear nuevo documento">
+            <i class="bi bi-file-earmark-plus"></i> <span class="d-none d-md-inline ms-1">Nuevo</span>
+          </button>
+          <button id="btnGuardar" class="btn btn-primary btn-sm px-3 fw-medium d-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-cloud-arrow-up-fill"></i> <span>Guardar</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <div class="container-fluid flex-grow-1 p-0 overflow-hidden position-relative">
+    <div id="serviceLockOverlay" class="service-lock-overlay d-none">
+      <div class="text-center p-4 bg-white rounded shadow-lg border border-danger" style="max-width: 480px;">
+        <i class="bi bi-lock-fill text-danger display-1 mb-2"></i>
+        <h3 class="fw-bold text-dark mb-2">Prueba Gratuita Expirada</h3>
+        <p class="text-muted mb-4">Tu periodo de prueba de 1 minuto ha finalizado. Actualiza a <strong>CloudDoc Pro</strong> para continuar editando y guardando tus documentos.</p>
+        <button id="btnOpenPaymentFromOverlay" class="btn btn-warning btn-lg w-100 fw-bold shadow">
+          <i class="bi bi-credit-card-fill me-2"></i> Actualizar a Plan Pro ($9.99/mes)
+        </button>
+      </div>
+    </div>
+    <div class="row g-0 h-100">
+      <aside class="col-lg-3 col-xl-2 bg-white border-end d-none d-lg-flex flex-column h-100 p-0 shadow-sm">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light-subtle">
+          <h6 class="mb-0 fw-bold text-secondary text-uppercase fs-xs tracking-wider">
+            <i class="bi bi-collection me-1"></i> Mis Documentos
+          </h6>
+          <span id="totalDocsBadge" class="badge bg-secondary rounded-pill">0</span>
+        </div>
+        <div class="p-2 border-bottom">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="searchDesktop" class="form-control border-start-0 ps-0" placeholder="Buscar...">
+          </div>
+        </div>
+        <div class="flex-grow-1 overflow-y-auto p-2" id="listaDocsDesktop">
+          <div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary"></div> Cargando...</div>
+        </div>
+        <div class="p-2 border-top bg-light text-center">
+          <small class="text-muted fs-xs">SaaS Cloud Node: H2 in-memory</small>
+        </div>
+      </aside>
+      <main class="col-12 col-lg-9 col-xl-10 d-flex flex-column h-100 bg-secondary-subtle overflow-hidden">
+        <div class="bg-white border-bottom px-2 py-2 shadow-xs editor-toolbar-wrapper">
+          <div class="d-flex align-items-center gap-1 overflow-x-auto pb-1 pb-md-0 scroll-touch" id="editorToolbar">
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('undo')" title="Deshacer"><i class="bi bi-arrow-counterclockwise"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('redo')" title="Rehacer"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div class="vr mx-1 my-1 text-secondary opacity-25"></div>
+            <select class="form-select form-select-sm toolbar-select w-auto" onchange="formatDoc('formatBlock', this.value); this.selectedIndex=0;">
+              <option selected disabled>Estilo</option>
+              <option value="p">Normal</option>
+              <option value="h1">Título 1</option>
+              <option value="h2">Título 2</option>
+              <option value="h3">Título 3</option>
+            </select>
+            <div class="vr mx-1 my-1 text-secondary opacity-25"></div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('bold')" title="Negrita (Ctrl+B)"><i class="bi bi-type-bold"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('italic')" title="Cursiva (Ctrl+I)"><i class="bi bi-type-italic"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('underline')" title="Subrayado (Ctrl+U)"><i class="bi bi-type-underline"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('strikeThrough')" title="Tachado"><i class="bi bi-type-strikethrough"></i></button>
+            </div>
+            <div class="vr mx-1 my-1 text-secondary opacity-25"></div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('justifyLeft')" title="Alinear a la izquierda"><i class="bi bi-text-left"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('justifyCenter')" title="Centrar"><i class="bi bi-text-center"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('justifyRight')" title="Alinear a la derecha"><i class="bi bi-text-right"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('justifyFull')" title="Justificar"><i class="bi bi-justify"></i></button>
+            </div>
+            <div class="vr mx-1 my-1 text-secondary opacity-25"></div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('insertUnorderedList')" title="Viñetas"><i class="bi bi-list-ul"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="formatDoc('insertOrderedList')" title="Numeración"><i class="bi bi-list-ol"></i></button>
+            </div>
+            <div class="vr mx-1 my-1 text-secondary opacity-25"></div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary toolbar-btn position-relative overflow-hidden" title="Color de texto">
+                <i class="bi bi-palette"></i>
+                <input type="color" class="position-absolute top-0 start-0 opacity-0 w-100 h-100 cursor-pointer" onchange="formatDoc('foreColor', this.value)">
+              </button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn" onclick="insertarHipervinculo()" title="Insertar enlace"><i class="bi bi-link-45deg"></i></button>
+              <button type="button" class="btn btn-outline-secondary toolbar-btn text-danger" onclick="formatDoc('removeFormat')" title="Limpiar Formato"><i class="bi bi-eraser"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="flex-grow-1 overflow-y-auto p-2 p-sm-3 p-md-4 d-flex justify-content-center align-items-start editor-viewport">
+          <div class="document-page bg-white shadow-sm rounded-1 p-4 p-md-5 w-100">
+            <div id="docContenido" class="editor-editable-area" contenteditable="true" spellcheck="true" placeholder="Comienza a redactar tu documento SaaS aquí..."></div>
+          </div>
+        </div>
+        <footer class="bg-white border-top px-3 py-1 d-flex justify-content-between align-items-center text-muted fs-xs shadow-xs">
+          <div class="d-flex gap-3">
+            <span><i class="bi bi-file-earmark-font me-1"></i><span id="lblPalabras">0</span> palabras</span>
+            <span><i class="bi bi-fonts me-1"></i><span id="lblCaracteres">0</span> caracteres</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success-subtle text-success border border-success-subtle d-none d-sm-inline">Auto-Save OK</span>
+            <span id="lblUltimaModificacion">Listo</span>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </div>
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
+    <div class="offcanvas-header bg-dark text-white border-bottom">
+      <h5 class="offcanvas-title fs-6 fw-bold d-flex align-items-center gap-2" id="offcanvasSidebarLabel">
+        <i class="bi bi-folder2-open text-primary"></i> Mis Documentos SaaS
+      </h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+      <div class="p-3 border-bottom bg-light">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input type="text" id="searchMobile" class="form-control" placeholder="Buscar documento...">
+        </div>
+      </div>
+      <div class="flex-grow-1 overflow-y-auto p-2" id="listaDocsMobile"></div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-dark text-white p-4">
+          <div class="d-flex align-items-center gap-2">
+            <div class="bg-primary text-white rounded p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+              <i class="bi bi-shield-lock-fill fs-4"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-0" id="loginModalLabel">Iniciar Sesión — CloudDoc SaaS</h5>
+              <small class="text-white-50 fs-xs">Prueba de 1 minuto incluida</small>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body p-4">
+          <form id="loginForm">
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label fw-semibold">Correo Electrónico</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                <input type="email" id="loginEmail" class="form-control" placeholder="usuario@empresa.com" required value="usuario@demo.com">
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="loginPassword" class="form-label fw-semibold">Contraseña</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required value="123456">
+              </div>
+            </div>
+            <button type="submit" id="btnSubmitLogin" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+              <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión y Probar (1 min)
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="paymentModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-warning text-dark p-4">
+          <div class="d-flex align-items-center gap-2">
+            <div class="bg-dark text-warning rounded p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+              <i class="bi bi-star-fill fs-4"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-0" id="paymentModalLabel">Actualizar a CloudDoc Pro</h5>
+              <small class="text-dark-50 fs-xs">Prueba de 1 minuto finalizada</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btnClosePaymentModal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="card bg-light border-warning mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="fw-bold mb-1">Plan Pro Ilimitado</h6>
+                <small class="text-muted">Acceso completo al editor SaaS</small>
+              </div>
+              <div class="text-end">
+                <span class="fs-4 fw-bold text-primary">$9.99</span>
+                <small class="text-muted d-block">/ mes</small>
+              </div>
+            </div>
+          </div>
+          <form id="paymentForm">
+            <div class="mb-3">
+              <label for="cardNum" class="form-label fw-semibold">Número de Tarjeta</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-credit-card"></i></span>
+                <input type="text" id="cardNum" class="form-control" placeholder="4532 •••• •••• 8892" required value="4532 8901 2345 8892">
+              </div>
+            </div>
+            <div class="row g-2 mb-4">
+              <div class="col-6">
+                <label for="cardExp" class="form-label fw-semibold">Expiración</label>
+                <input type="text" id="cardExp" class="form-control" placeholder="MM/AA" required value="12/28">
+              </div>
+              <div class="col-6">
+                <label for="cardCvv" class="form-label fw-semibold">CVC / CVV</label>
+                <input type="text" id="cardCvv" class="form-control" placeholder="123" required value="888">
+              </div>
+            </div>
+            <button type="submit" id="btnSubmitPayment" class="btn btn-warning btn-lg w-100 fw-bold shadow-sm">
+              <i class="bi bi-check-circle-fill me-2"></i> Pagar $9.99 y Desbloquear Editor
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="appToast" class="toast align-items-center text-white bg-dark border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center gap-2" id="toastMessage">
+          <i class="bi bi-check-circle-fill text-success fs-5"></i> Mensaje de notificación
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
